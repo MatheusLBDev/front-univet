@@ -4,7 +4,7 @@ import { Product, Service, Sale, SaleItem, Appointment } from '../types';
 import { Modal } from './Modal';
 import { PlusIcon } from './icons';
 
-const API_URL = 'http://127.0.0.1:8000';
+const API_URL = 'https://app-univet.onrender.com';
 
 // Props definition
 interface InventoryProps {

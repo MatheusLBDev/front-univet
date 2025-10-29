@@ -9,7 +9,7 @@ const Clients = lazy(() => import('./components/Clients').then(module => ({ defa
 const Appointments = lazy(() => import('./components/Appointments').then(module => ({ default: module.Appointments })));
 const Inventory = lazy(() => import('./components/Inventory').then(module => ({ default: module.Inventory })));
 
-const API_URL = '/api';
+const API_URL = 'https://app-univet.onrender.com';
 
 function App() {
   const [currentPage, setCurrentPage] = useState<Page>(Page.Dashboard);
