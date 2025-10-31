@@ -87,59 +87,31 @@ const OverviewTab: React.FC<InventoryProps> = ({ products, sales }) => {
     const [error, setError] = useState<string | null>(null);
     const [forecastData, setForecastData] = useState<ForecastData[] | null>(null);
     const [suggestions, setSuggestions] = useState<any[] | null>(null);
-    const [analytics, setAnalytics] = useState<{
-        lowStock: any[];
-        lowActivity: any[];
-        bestSellers: any[];
-        consumptionPatterns: any[];
-    } | null>(null);
 
     const handleForecast = async () => {
         setLoading(true);
         setError(null);
         setForecastData(null);
         setSuggestions(null);
-        setAnalytics(null);
-
-            try {
-        // Requisições em paralelo
-        const forecastPromise = fetch(`${API_URL}/forecast/sales`).then(r => r.json());
-        const analyticsUrls = [
-            `${API_URL}/analytics/low-stock`,
-            `${API_URL}/analytics/low-activity`,
-            `${API_URL}/analytics/best-sellers`,
-            `${API_URL}/analytics/consumption-patterns`
-        ];
-        const analyticsPromise = Promise.all(analyticsUrls.map(url => fetch(url).then(r => r.json())));
-
-        const [forecastDataResp, [lowStock, lowActivity, bestSellers, consumptionPatterns]] = await Promise.all([
-            forecastPromise,
-            analyticsPromise
-        ]);
-
-        // Tratar resposta de forecast
-        if (forecastDataResp.message) {
-            setError(forecastDataResp.message);
-        } else {
-            setForecastData(forecastDataResp.forecast);
-            setSuggestions(forecastDataResp.inventory_suggestions);
+        try {
+            const response = await fetch(`${API_URL}/forecast/sales`);
+            if (!response.ok) {
+                throw new Error('Failed to fetch forecast data');
+            }
+            const data = await response.json();
+            if (data.message) {
+                setError(data.message);
+            } else {
+                setForecastData(data.forecast);
+                setSuggestions(data.inventory_suggestions);
+            }
+        } catch (e) {
+            console.error(e);
+            setError("Falha ao gerar a previsão. Tente novamente.");
+        } finally {
+            setLoading(false);
         }
-
-        // Atualizar analytics
-        setAnalytics({
-            lowStock,
-            lowActivity,
-            bestSellers,
-            consumptionPatterns
-        });
-
-    } catch (e) {
-        console.error(e);
-        setError("Falha ao gerar previsão e carregar insights. Tente novamente.");
-    } finally {
-        setLoading(false);
-    }
-};
+    };
 
 
     return (
@@ -195,55 +167,6 @@ const OverviewTab: React.FC<InventoryProps> = ({ products, sales }) => {
                                     ))}
                                 </tbody>
                             </table>
-                        </div>
-                    </div>
-                )}
-
-                {/* Renderização dos dados de Analytics */}
-                {analytics && (
-                    <div className="mt-6">
-                        <h3 className="text-xl font-semibold text-gray-700 mb-4">Insights de Analytics</h3>
-
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                            <div className="bg-gray-50 p-4 rounded-lg shadow-sm">
-                                <h4 className="font-semibold mb-2">Produtos com Baixo Estoque</h4>
-                                <p>{analytics.lowStock.length} produtos</p>
-                                <ul className="list-disc list-inside mt-2">
-                                    {analytics.lowStock.map((p: any) => (
-                                        <li key={p.id}>{p.name} - Estoque: {p.stock}</li>
-                                    ))}
-                                </ul>
-                            </div>
-
-                            <div className="bg-gray-50 p-4 rounded-lg shadow-sm">
-                                <h4 className="font-semibold mb-2">Produtos com Baixa Movimentação</h4>
-                                <p>{analytics.lowActivity.length} produtos</p>
-                                <ul className="list-disc list-inside mt-2">
-                                    {analytics.lowActivity.map((p: any) => (
-                                        <li key={p.id}>{p.name}</li>
-                                    ))}
-                                </ul>
-                            </div>
-
-                            <div className="bg-gray-50 p-4 rounded-lg shadow-sm">
-                                <h4 className="font-semibold mb-2">Mais Vendidos</h4>
-                                <ul className="list-disc list-inside mt-2">
-                                    {analytics.bestSellers.map((p: any) => (
-                                        <li key={p.name}>{p.name} - Quantidade Vendida: {p.total_sold}</li>
-                                    ))}
-                                </ul>
-                            </div>
-
-                            <div className="bg-gray-50 p-4 rounded-lg shadow-sm">
-                                <h4 className="font-semibold mb-2">Padrões de Consumo</h4>
-                                <ul className="list-disc list-inside mt-2">
-                                    {analytics.consumptionPatterns.map((p: any, index: number) => (
-                                        <li key={index}>
-                                            {p.client} - {p.pet} - {p.product}: {p.qty}
-                                        </li>
-                                    ))}
-                                </ul>
-                            </div>
                         </div>
                     </div>
                 )}
